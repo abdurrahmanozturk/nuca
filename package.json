@@ -3,6 +3,7 @@
   "displayName": "Nuclear Code Assistant",
   "description": "Assistant for Nuclear Codes input editing and execution",
   "version": "0.0.1",
+  "publisher": "aozturk",
   "engines": {
     "vscode": "^1.85.0"
   },
