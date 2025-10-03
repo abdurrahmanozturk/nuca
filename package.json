@@ -1,7 +1,7 @@
 {
   "name": "nuca",
   "displayName": "Nuclear Code Assistant",
-  "description": "Assistant for Nuclear Codes input editing and execution",
+  "description": "Assists with editing input files and running simulations for nuclear codes such as FRAPCON, FRAPTRAN, and SERPENT.",
   "version": "0.0.1",
   "publisher": "aozturk",
   "engines": {
