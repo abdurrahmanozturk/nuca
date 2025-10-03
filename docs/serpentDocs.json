@@ -1,0 +1,32 @@
+[
+  {
+    "name": "set",
+    "description": "Defines global calculation options. (e.g., `set pop 1000 200 50`)",
+    "inputBlock": "global",
+    "required": true
+  },
+  {
+    "name": "materials",
+    "description": "Material definitions. Each material starts with `mat <name> <density>` followed by nuclides.",
+    "inputBlock": "materials",
+    "required": true
+  },
+  {
+    "name": "geometry",
+    "description": "Geometry definition, including surfaces, cells, universes, and lattices.",
+    "inputBlock": "geometry",
+    "required": true
+  },
+  {
+    "name": "depl",
+    "description": "Depletion settings for burnup calculations.",
+    "inputBlock": "depletion",
+    "required": false
+  },
+  {
+    "name": "plot",
+    "description": "Plotting options to visualize geometry or material regions.",
+    "inputBlock": "plotting",
+    "required": false
+  }
+]

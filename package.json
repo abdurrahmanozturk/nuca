@@ -1,0 +1,132 @@
+{
+  "name": "nuca",
+  "displayName": "Nuclear Code Assistant",
+  "description": "Assistant for Nuclear Codes input editing and execution",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages"],
+  "keywords": [
+    "FRAPCON",
+    "fuel performance",
+    "nuclear fuel",
+    "fuel rod",
+    "reactor",
+    "simulation",
+    "materials"
+  ],
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#0f172a",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onLanguage:frapcon",
+    "onCommand:frapcon.run",
+    "onLanguage:fraptran",
+    "onCommand:fraptran.run",
+    "onLanguage:serpent",
+    "onCommand:serpent.run"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "frapcon",
+        "extensions": [".frpcon", ".frpcn", ".inp"],
+        "aliases": ["FRAPCON"],
+        "configuration": "./language-configuration-frapcon.json"
+      },
+      {
+        "id": "fraptran",
+        "extensions": [".frptrn", ".frptn", ".inp"],
+        "aliases": ["FRAPTRAN"],
+        "configuration": "./language-configuration-fraptran.json"
+      },
+      {
+        "id": "serpent",
+        "extensions": [".srpnt", ".inp"],
+        "aliases": ["SERPENT"],
+        "configuration": "./language-configuration-serpent.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "frapcon",
+        "scopeName": "source.frapcon",
+        "path": "./syntaxes/frapcon.tmLanguage.json"
+      },
+      {
+        "language": "fraptran",
+        "scopeName": "source.fraptran",
+        "path": "./syntaxes/fraptran.tmLanguage.json"
+      },
+      {
+        "language": "serpent",
+        "scopeName": "source.serpent",
+        "path": "./syntaxes/serpent.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "frapcon",
+        "path": "./snippets/frapcon.snippets.json"
+      },
+      {
+        "language": "fraptran",
+        "path": "./snippets/fraptran.snippets.json"
+      },
+      {
+        "language": "serpent",
+        "path": "./snippets/serpent.snippets.json"
+      }
+    ],
+    "commands": [
+      { "command": "frapcon.run", "title": "Run FRAPCON", "category": "FRAPCON" },
+      { "command": "frapcon.terminate", "title": "Terminate FRAPCON", "category": "FRAPCON" },
+      { "command": "fraptran.run", "title": "Run FRAPTRAN", "category": "FRAPTRAN" },
+      { "command": "fraptran.terminate", "title": "Terminate FRAPTRAN", "category": "FRAPTRAN" },
+      { "command": "serpent.run", "title": "Run SERPENT", "category": "SERPENT" },
+      { "command": "serpent.terminate", "title": "Terminate SERPENT", "category": "SERPENT" }
+    ],
+    "configuration": {
+      "title": "Nuclear Tools",
+      "properties": {
+        "frapcon.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to FRAPCON executable"
+        },
+        "fraptran.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to FRAPTRAN executable"
+        },
+        "serpent.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to SERPENT executable"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abdurrahmanozturk/nuca"
+  },
+  "bugs": {
+    "url": "https://github.com/abdurrahmanozturk/nuca/issues"
+  },
+  "homepage": "https://github.com/abdurrahmanozturk/nuca",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.0.0",
+    "tslint": "^6.1.3"
+  }
+}

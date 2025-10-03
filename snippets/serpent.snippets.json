@@ -1,0 +1,21 @@
+{
+  "SERPENT Minimal Case": {
+    "prefix": "serpent-min",
+    "body": [
+      "set pop 1000 200 50",
+      "",
+      "% --- Materials ---",
+      "mat fuel -10.0",
+      "    U235.09c 0.03",
+      "    U238.09c 0.97",
+      "",
+      "% --- Geometry ---",
+      "surf 1 cyl 0.0 0.0 0.4",
+      "cell 1 0 fuel -1",
+      "",
+      "% --- Plotting ---",
+      "plot 2 500 500"
+    ],
+    "description": "Minimal SERPENT input file template"
+  }
+}

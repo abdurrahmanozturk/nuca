@@ -1,0 +1,13 @@
+{
+  "FRAPTRAN Minimal Case": {
+    "prefix": "fraptran-min",
+    "body": [
+      "$frtran",
+      "    tend = ,",
+      "    dt = ,",
+      "    npower = ,",
+      "$end"
+    ],
+    "description": "Minimal FRAPTRAN input file template"
+  }
+}

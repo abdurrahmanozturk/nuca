@@ -1,0 +1,32 @@
+[
+  {
+    "name": "$frtran",
+    "description": "Main FRAPTRAN control block. Case setup and run control parameters.",
+    "inputBlock": "$frtran",
+    "required": true
+  },
+  {
+    "name": "tend",
+    "description": "End time of the transient (s).",
+    "inputBlock": "$frtran",
+    "required": true
+  },
+  {
+    "name": "dt",
+    "description": "Time step size (s).",
+    "inputBlock": "$frtran",
+    "required": true
+  },
+  {
+    "name": "npower",
+    "description": "Number of power steps.",
+    "inputBlock": "$frtran",
+    "required": false
+  },
+  {
+    "name": "$end",
+    "description": "Marks the end of the FRAPTRAN block.",
+    "inputBlock": "$frtran",
+    "required": true
+  }
+]

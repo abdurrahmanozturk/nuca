@@ -1,0 +1,29 @@
+{
+  "scopeName": "source.frapcon",
+  "patterns": [
+    {
+      "name": "comment.line.asterisk.frapcon",
+      "match": "^\\s*\\*.*$"
+    },
+    {
+      "name": "keyword.control.frapcon",
+      "match": "\\${1,2}(frpcon|frpmox|frpcn|emfpcn|end)\\b"
+    },
+    {
+      "name": "variable.parameter.frapcon",
+      "match": "\\b(dco|thkcld|thkgap|totl|cpl|dspg|dspgw|vs|hplt|rc|hdish|dishsd|enrch|imox|comp|moxtype|enrpu39|enrpu40|enrpu41|enrpu42|fotmtl|gadoln|ifba|b10|zrb2thick|zrb2den|ppmh2o|ppmn2|den|deng|roughf|rsntr|tsint|icm|zr2vintage|cldwks|roughc|catexf|chorg|fgpav|idxgas|amfair|amfarg|amffg|amfhe|amfh2|amfh2o|amfkry|amfn2|amfxe|iplant|nsp|p2|tw|go|pitch|icor|crdt|crdtr|crudmult|flux|im|ProblemTime|qmpy|iq|x|qf|jn|jst|fa|ifixedtsurf|xt|cladt|jnsurftemp|jstsurftemp|nr|ngasr|ngasmod|na|nunits|crephr|sgapf|slim|qend|igas|mechan|nce|frcoef|igascal|p1|sigftc|sigftex|sigfgr|sigswell|sigcreep|siggro|sigcor|sigh2|imswch|impowr|imfuel|imdens|imrelo|imclad|imgapc|imenrg|jdlpr|nopt|nplot|ntape|nread|nrestr)\\b"
+    },
+    {
+      "name": "constant.numeric.frapcon",
+      "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+    },
+    {
+      "name": "keyword.operator.assignment.frapcon",
+      "match": "="
+    },
+    {
+      "name": "punctuation.separator.frapcon",
+      "match": ","
+    }
+  ]
+}
