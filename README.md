@@ -14,5 +14,3 @@ NUCA is a Visual Studio Code extension designed to assist nuclear engineers and 
 
 ## License
 MIT
-
-![NUCA](https://github.com/abdurrahmanozturk/nuca/blob/main/images/icon.png)
