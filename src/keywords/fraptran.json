@@ -1,0 +1,16 @@
+{
+  "fraptran": [
+    "$fraptran",
+    "FILE15",
+    "FILE22",
+    "$begin",
+    "$iodata",
+    "$solution",
+    "$design",
+    "$model",
+    "$power",
+    "$boundary",
+    "$tuning",
+    "start"
+  ]
+}

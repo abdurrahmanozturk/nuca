@@ -1,0 +1,18 @@
+{
+  "serpent": [
+    "set",
+    "mat",
+    "pin",
+    "cell",
+    "div",
+    "surf ",
+    "mix",
+    "mat fuel",
+    "set power",
+    "set pop",
+    "set bc",
+    "set acelib",
+    "set declib",
+    "set nfylib"
+  ]
+}

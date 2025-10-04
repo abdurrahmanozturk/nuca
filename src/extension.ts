@@ -1,207 +1,162 @@
 import * as vscode from "vscode";
-import * as path from "path";
+import { exec, ChildProcess } from "child_process";
 import * as fs from "fs";
-import { spawn, ChildProcessWithoutNullStreams } from "child_process";
+import * as path from "path";
 
-interface CodeConfig {
-  id: string;
-  displayName: string;
-  fileExt: string;
-  docsFile: string;
-  runCommand: string;
-  terminateCommand: string;
-  executableConfigKey: string;
-}
+let statusBarItem: vscode.StatusBarItem;
+let runningProcess: ChildProcess | null = null;
+let currentLang: string | null = null;
 
-const codes: CodeConfig[] = [
-  {
-    id: "frapcon",
-    displayName: "FRAPCON",
-    fileExt: ".inp",
-    docsFile: "frapconDocs.json",
-    runCommand: "frapcon.run",
-    terminateCommand: "frapcon.terminate",
-    executableConfigKey: "frapcon.executablePath",
-  },
-  {
-    id: "fraptran",
-    displayName: "FRAPTRAN",
-    fileExt: ".ftn",
-    docsFile: "fraptranDocs.json",
-    runCommand: "fraptran.run",
-    terminateCommand: "fraptran.terminate",
-    executableConfigKey: "fraptran.executablePath",
-  },
-  {
-    id: "serpent",
-    displayName: "SERPENT",
-    fileExt: ".inp",
-    docsFile: "serpentDocs.json",
-    runCommand: "serpent.run",
-    terminateCommand: "serpent.terminate",
-    executableConfigKey: "serpent.executablePath",
-  },
-];
-
-let activeProcesses: { [key: string]: ChildProcessWithoutNullStreams } = {};
-
-function loadDocs(context: vscode.ExtensionContext, docsFile: string) {
-  const docsPath = path.join(context.extensionPath, "docs", docsFile);
-  if (!fs.existsSync(docsPath)) {
-    return [];
-  }
-  return JSON.parse(fs.readFileSync(docsPath, "utf-8"));
-}
+type KeywordMap = { [lang: string]: string[] };
+let keywordMap: KeywordMap = {};
 
 export function activate(context: vscode.ExtensionContext) {
-  codes.forEach((code) => {
-    const docs = loadDocs(context, code.docsFile);
+  console.log("NUCA extension activated");
 
-    // Completion provider
-    context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        { language: code.id },
-        {
-          provideCompletionItems(
-            document: vscode.TextDocument,
-            position: vscode.Position
-          ) {
-            const items: vscode.CompletionItem[] = [];
+  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+  context.subscriptions.push(statusBarItem);
 
-            docs.forEach((entry: any) => {
-              const kind = entry.required
-                ? vscode.CompletionItemKind.EnumMember
-                : vscode.CompletionItemKind.Variable;
+  // Load keyword lists
+  loadKeywords(context);
 
-              const item = new vscode.CompletionItem(entry.name, kind);
+  // Register run commands
+  context.subscriptions.push(
+    vscode.commands.registerCommand("frapcon.run", () => runCode("frapcon")),
+    vscode.commands.registerCommand("fraptran.run", () => runCode("fraptran")),
+    vscode.commands.registerCommand("serpent.run", () => runCode("serpent")),
+    vscode.commands.registerCommand("nuca.terminate", terminateProcess)
+  );
 
-              (item as any).label = {
-                label: entry.name,
-                description: entry.required
-                  ? `Required 🔴`
-                  : `Optional`,
-              };
+  // React to editor/document changes
+  vscode.window.onDidChangeActiveTextEditor(editor => {
+    updateStatusBarForLanguage(editor?.document);
+  }, null, context.subscriptions);
 
-              item.detail = entry.inputBlock
-                ? `${entry.inputBlock}`
-                : undefined;
+  vscode.workspace.onDidOpenTextDocument(doc => {
+    updateStatusBarForLanguage(doc);
+  }, null, context.subscriptions);
 
-              item.documentation = new vscode.MarkdownString(
-                `**${entry.name}**\n\n${entry.description || ""}`
-              );
+  // Initial setup
+  updateStatusBarForLanguage(vscode.window.activeTextEditor?.document);
+}
 
-              if (entry.required) {
-                item.insertText = new vscode.SnippetString(
-                  `${entry.name} = ,`
-                );
-              } else {
-                item.insertText = `${entry.name} = `;
-              }
+function loadKeywords(context: vscode.ExtensionContext) {
+  const keywordsDir = path.join(context.extensionPath, "src", "keywords");
 
-              items.push(item);
-            });
-
-            return items;
-          },
-        },
-        " ",
-        "$"
-      )
-    );
-
-    // Hover provider
-    context.subscriptions.push(
-      vscode.languages.registerHoverProvider({ language: code.id }, {
-        provideHover(document, position) {
-          const range = document.getWordRangeAtPosition(position, /[\w$]+/);
-          if (!range) return;
-          const word = document.getText(range);
-          const match = docs.find((d: any) => d.name === word);
-          if (match) {
-            return new vscode.Hover(
-              new vscode.MarkdownString(
-                `**${match.name}**\n\n${match.description || ""}`
-              )
-            );
-          }
-        },
-      })
-    );
-
-    // Run command
-    context.subscriptions.push(
-      vscode.commands.registerCommand(code.runCommand, async () => {
-        if (activeProcesses[code.id]) {
-          vscode.window.showWarningMessage(`${code.displayName} is already running.`);
-          return;
-        }
-
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) return;
-        await editor.document.save();
-
-        const config = vscode.workspace.getConfiguration();
-        const exePath = config.get<string>(code.executableConfigKey);
-
-        if (!exePath || exePath.trim() === "") {
-          vscode.window.showErrorMessage(`Executable path for ${code.displayName} not set. Please configure it in settings.`);
-          return;
-        }
-
-        const filePath = editor.document.fileName;
-        const process = spawn(exePath, [filePath], {
-          cwd: path.dirname(filePath),
-        });
-
-        activeProcesses[code.id] = process;
-
-        process.stdout.on("data", (data) => {
-          vscode.window.showInformationMessage(`${code.displayName}: ${data}`);
-        });
-
-        process.stderr.on("data", (data) => {
-          vscode.window.showErrorMessage(`${code.displayName} Error: ${data}`);
-        });
-
-        process.on("close", () => {
-          vscode.window.showInformationMessage(`${code.displayName} finished.`);
-          delete activeProcesses[code.id];
-        });
-      })
-    );
-
-    // Terminate command
-    context.subscriptions.push(
-      vscode.commands.registerCommand(code.terminateCommand, () => {
-        const proc = activeProcesses[code.id];
-        if (proc) {
-          proc.kill();
-          vscode.window.showWarningMessage(`${code.displayName} terminated.`);
-          delete activeProcesses[code.id];
-        } else {
-          vscode.window.showInformationMessage(`No running ${code.displayName} process found.`);
-        }
-      })
-    );
-
-    // Status bar
-    const runButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-    runButton.text = `▶ ${code.displayName}`;
-    runButton.command = code.runCommand;
-    runButton.tooltip = `Run ${code.displayName}`;
-    runButton.show();
-    context.subscriptions.push(runButton);
-
-    const terminateButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
-    terminateButton.text = `⏹ ${code.displayName}`;
-    terminateButton.command = code.terminateCommand;
-    terminateButton.tooltip = `Terminate ${code.displayName}`;
-    terminateButton.show();
-    context.subscriptions.push(terminateButton);
+  ["frapcon", "fraptran", "serpent"].forEach(lang => {
+    const filePath = path.join(keywordsDir, `${lang}.json`);
+    try {
+      const data = fs.readFileSync(filePath, "utf-8");
+      const parsed = JSON.parse(data);
+      keywordMap[lang] = parsed[lang] || [];
+    } catch (err) {
+      console.warn(`Could not load keywords for ${lang}:`, err);
+      keywordMap[lang] = [];
+    }
   });
 }
 
+function detectCodeFromDoc(doc: vscode.TextDocument): string | null {
+  const text = doc.getText().toLowerCase();
+
+  // Strong hints from extensions
+  if (doc.fileName.endsWith(".frpcon") || doc.fileName.endsWith(".frpcn")) return "frapcon";
+  if (doc.fileName.endsWith(".frptrn") || doc.fileName.endsWith(".frptn")) return "fraptran";
+  if (doc.fileName.endsWith(".srpnt") || doc.fileName.endsWith(".serpent")) return "serpent";
+
+  // Keyword-based detection for *any* file type
+  for (const lang in keywordMap) {
+    for (const keyword of keywordMap[lang]) {
+      if (text.includes(keyword.toLowerCase())) {
+        return lang;
+      }
+    }
+  }
+
+  return null; // Unknown
+}
+
+function updateStatusBarForLanguage(doc?: vscode.TextDocument) {
+  if (!doc) {
+    statusBarItem.hide();
+    currentLang = null;
+    return;
+  }
+
+  const lang = detectCodeFromDoc(doc);
+  if (!lang) {
+    statusBarItem.hide();
+    currentLang = null;
+    return;
+  }
+
+  currentLang = lang;
+  
+  // Automatically set language mode if not already set
+  if (doc.languageId !== lang) {
+    vscode.languages.setTextDocumentLanguage(doc, lang);
+  }
+
+
+  if (runningProcess) {
+    statusBarItem.text = "$(stop) Terminate " + lang.toUpperCase();
+    statusBarItem.tooltip = `Terminate ${lang.toUpperCase()} process`;
+    statusBarItem.command = "nuca.terminate";
+  } else {
+    statusBarItem.text = "$(play) Run " + lang.toUpperCase();
+    statusBarItem.tooltip = `Run ${lang.toUpperCase()} on the active file`;
+    statusBarItem.command = `${lang}.run`;
+  }
+
+  statusBarItem.show();
+}
+
+function runCode(lang: string) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage("No active editor");
+    return;
+  }
+
+  const filePath = editor.document.uri.fsPath;
+  let cmd = "";
+
+  switch (lang) {
+    case "frapcon":
+      cmd = `frapcon ${filePath}`;
+      break;
+    case "fraptran":
+      cmd = `fraptran ${filePath}`;
+      break;
+    case "serpent":
+      cmd = `sss2 ${filePath}`;
+      break;
+  }
+
+  vscode.window.showInformationMessage(`Running ${lang.toUpperCase()}...`);
+  runningProcess = exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      vscode.window.showErrorMessage(`${lang.toUpperCase()} failed: ${error.message}`);
+    } else {
+      vscode.window.showInformationMessage(`${lang.toUpperCase()} finished successfully`);
+    }
+
+    runningProcess = null;
+    updateStatusBarForLanguage(vscode.window.activeTextEditor?.document);
+  });
+
+  updateStatusBarForLanguage(vscode.window.activeTextEditor?.document);
+}
+
+function terminateProcess() {
+  if (runningProcess) {
+    runningProcess.kill();
+    vscode.window.showInformationMessage("Process terminated");
+    runningProcess = null;
+    updateStatusBarForLanguage(vscode.window.activeTextEditor?.document);
+  }
+}
+
 export function deactivate() {
-  Object.values(activeProcesses).forEach((proc) => proc.kill());
-  activeProcesses = {};
+  terminateProcess();
 }
